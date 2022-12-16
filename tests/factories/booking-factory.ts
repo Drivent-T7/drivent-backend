@@ -1,18 +1,10 @@
-import faker from "@faker-js/faker";
-import { Booking } from "@prisma/client";
 import { prisma } from "@/config";
 
-type CreateBookingParams = {
-  roomId: number,
-  userId: number,
-}
-
-export function createBooking({ roomId, userId }: CreateBookingParams) {
+export function createBooking(roomId: number, userId: number) {
   return prisma.booking.create({
     data: {
-      userId,
       roomId,
-    }
+      userId,
+    },
   });
 }
-
