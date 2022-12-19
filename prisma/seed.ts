@@ -18,9 +18,27 @@ async function main() {
 
   console.log({ event });
 
+  await createTicketType();
+
+  await createHotelsWithRooms();
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
+
+
+
+async function createTicketType() {
   let ticketType = await prisma.ticketType.findMany();
-  if (!ticketType) {
-    const ticketType = await prisma.ticketType.createMany({
+  if (!ticketType[0]) {
+    await prisma.ticketType.createMany({
       data: [{
         name: "Presencial + Com Hotel",
         price: 50000,
@@ -40,16 +58,16 @@ async function main() {
         includesHotel: false,
       }]
     });
-
-    console.log(ticketType)
-  } else {
-    console.log(ticketType)
   }
 
+  ticketType = await prisma.ticketType.findMany();
+  console.log({ ticketType })
+};
 
+async function createHotelsWithRooms() {
   let hotels = await prisma.hotel.findMany({ include: { Rooms: true } });
-  if (!hotels) {
-    const resort = await prisma.hotel.create({
+  if (!hotels[0]) {
+    await prisma.hotel.create({
       data: {
         name: "Driven Resort",
         image: "https://www.melhoresdestinos.com.br/wp-content/uploads/2021/04/resort-salinas-maragogi-capa-05.jpg",
@@ -103,7 +121,7 @@ async function main() {
       include: { Rooms: true }
     });
 
-    const palace = await prisma.hotel.create({
+    await prisma.hotel.create({
       data: {
         name: "Driven Palace",
         image: "https://carltonhoteis.com.br/wp-content/uploads/2019/08/palace-banner.jpg",
@@ -165,7 +183,7 @@ async function main() {
       include: { Rooms: true }
     });
 
-    const world = await prisma.hotel.create({
+    await prisma.hotel.create({
       data: {
         name: "Driven World",
         image: "https://media-cdn.tripadvisor.com/media/photo-s/16/1a/ea/54/hotel-presidente-4s.jpg",
@@ -218,22 +236,8 @@ async function main() {
       },
       include: { Rooms: true }
     });
-
-    hotels = [
-      resort,
-      palace,
-      world
-    ]
   }
 
-  console.log(hotels)
+  hotels = await prisma.hotel.findMany({ include: { Rooms: true } });
+  console.log({ hotels })
 }
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
