@@ -1,70 +1,51 @@
-import { AuthenticatedRequest } from "@/middlewares";
 import { Response } from "express";
 import httpStatus from "http-status";
-import bookingService from "@/services/booking-service";
+import { AuthenticatedRequest } from "@/middlewares";
+import bookingsService, { CreateBookingParams } from "@/services/booking-service";
 
-export async function listBooking(req: AuthenticatedRequest, res: Response) {
+export async function getBooking(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+
   try {
-    const { userId } = req;
-    const booking = await bookingService.getBooking(userId);
-    return res.status(httpStatus.OK).send({
-      id: booking.id,
-      Room: booking.Room,
-    });
+    const booking = await bookingsService.getBooking(userId);
+
+    return res.status(httpStatus.OK).send(booking);
   } catch (error) {
     return res.sendStatus(httpStatus.NOT_FOUND);
   }
 }
 
-export async function bookingRoom(req: AuthenticatedRequest, res: Response) {
+export async function postBooking(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+  const { roomId } = req.body as CreateBookingParams;
+
   try {
-    const { userId } = req;
+    const createdBooking = await bookingsService.postBooking({ userId, roomId });
 
-    const { roomId } = req.body;
-
-    if (!roomId) {
-      return res.sendStatus(httpStatus.BAD_REQUEST);
-    }
-
-    const booking = await bookingService.bookingRoomById(userId, Number(roomId));
-
-    return res.status(httpStatus.OK).send({
-      bookingId: booking.id,
-    });
+    return res.status(httpStatus.OK).send(createdBooking);
   } catch (error) {
-    if (error.name === "CannotBookingError") {
-      return res.sendStatus(httpStatus.FORBIDDEN);
+    if (error.name === "NotFoundError") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
     }
-    return res.sendStatus(httpStatus.NOT_FOUND);
+
+    return res.sendStatus(httpStatus.FORBIDDEN);
   }
 }
 
-export async function changeBooking(req: AuthenticatedRequest, res: Response) {
+export async function putBooking(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+  const { roomId } = req.body as CreateBookingParams;
+  const bookingId = Number(req.params.bookingId);
+
   try {
-    const { userId } = req;
+    const updatedBooking = await bookingsService.putBooking({ userId, roomId, bookingId });
 
-    const bookingId = Number(req.params.bookingId);
-
-    if (!bookingId) {
-      return res.sendStatus(httpStatus.BAD_REQUEST);
-    }
-
-    const { roomId } = req.body;
-
-    if (!roomId) {
-      return res.sendStatus(httpStatus.BAD_REQUEST);
-    }
-
-    const booking = await bookingService.changeBookingRoomById(userId, Number(roomId));
-
-    return res.status(httpStatus.OK).send({
-      bookingId: booking.id,
-    });
+    return res.status(httpStatus.OK).send(updatedBooking);
   } catch (error) {
-    if (error.name === "CannotBookingError") {
-      return res.sendStatus(httpStatus.FORBIDDEN);
+    if (error.name === "NotFoundError") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
     }
-    return res.sendStatus(httpStatus.NOT_FOUND);
+
+    return res.sendStatus(httpStatus.FORBIDDEN);
   }
 }
-

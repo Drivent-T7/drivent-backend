@@ -1,43 +1,85 @@
+import { Hotel, Room, TicketStatus } from "@prisma/client";
+import { notFoundError, unauthorizedError } from "@/errors";
+import { paymentRequiredError } from "./errors";
 import hotelRepository from "@/repositories/hotel-repository";
 import enrollmentRepository from "@/repositories/enrollment-repository";
 import ticketRepository from "@/repositories/ticket-repository";
-import { notFoundError } from "@/errors";
-import { cannotListHotelsError } from "@/errors/cannot-list-hotels-error";
 
-async function listHotels(userId: number) {
-  //Tem enrollment?
-  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
-  if (!enrollment) {
-    throw notFoundError();
-  }
-  //Tem ticket pago isOnline false e includesHotel true
-  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+async function getHotels(userId: number): Promise<GetHotelsResult[]> {
+  await validateUserTicketOrFail(userId);
+  const hotelsResult = await hotelRepository.findHotels();
 
-  if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
-    throw cannotListHotelsError();
-  }
-}
+  const hotels = hotelsResult.map((hotel) => {
+    let totalVacancies = 0;
+    let vacanciesReserved = 0;
+    const roomsCapacity: number[] = [];
 
-async function getHotels(userId: number) {
-  await listHotels(userId);
+    hotel.Rooms.forEach(({ capacity, _count: { Booking: bookings } }) => {
+      roomsCapacity.push(capacity);
+      totalVacancies += capacity;
+      vacanciesReserved += bookings;
+    });
 
-  const hotels = await hotelRepository.findHotels();
+    delete hotel.Rooms;
+
+    return {
+      ...hotel,
+      roomsCapacity,
+      availableVacancies: totalVacancies - vacanciesReserved,
+    };
+  });
+
   return hotels;
 }
 
-async function getHotelsWithRooms(userId: number, hotelId: number) {
-  await listHotels(userId);
-  const hotel = await hotelRepository.findRoomsByHotelId(hotelId);
-
-  if (!hotel) {
-    throw notFoundError();
-  }
-  return hotel;
-}
-
-const hotelService = {
-  getHotels,
-  getHotelsWithRooms,
+export type GetHotelsResult = Hotel & {
+  roomsCapacity: number[];
+  availableVacancies: number;
 };
 
-export default hotelService;
+async function getRoomsFromHotel(hotelId: number, userId: number): Promise<GetRoomsFromHotelResult> {
+  await validateUserTicketOrFail(userId);
+
+  const hotel = await hotelRepository.findRoomsFromHotelId(hotelId);
+
+  if (!hotel) throw notFoundError();
+
+  const rooms = hotel.Rooms.map(({ id, name, capacity, _count, createdAt, updatedAt }) => ({
+    id,
+    name,
+    capacity,
+    hotelId,
+    bookeds: _count.Booking,
+    createdAt,
+    updatedAt,
+  }));
+
+  const hotelResult = { ...hotel, Rooms: rooms };
+
+  return hotelResult;
+}
+
+export type GetRoomsFromHotelResult = Hotel & {
+  Rooms: (Room & {
+    bookeds: number;
+  })[];
+};
+
+async function validateUserTicketOrFail(userId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+
+  if (!enrollment) throw unauthorizedError();
+
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+
+  if (!ticket || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) throw unauthorizedError();
+
+  if (ticket.status !== TicketStatus.PAID) throw paymentRequiredError();
+}
+
+const hotelsService = {
+  getHotels,
+  getRoomsFromHotel,
+};
+
+export default hotelsService;

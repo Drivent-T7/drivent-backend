@@ -1,23 +1,49 @@
 import { prisma } from "@/config";
 
 async function findHotels() {
-  return prisma.hotel.findMany();
+  return prisma.hotel.findMany({
+    include: {
+      Rooms: {
+        select: {
+          capacity: true,
+          _count: {
+            select: {
+              Booking: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { id: "asc" },
+  });
 }
 
-async function findRoomsByHotelId(hotelId: number) {
-  return prisma.hotel.findFirst({
-    where: {
-      id: hotelId,
-    },
+async function findRoomsFromHotelId(id: number) {
+  return prisma.hotel.findUnique({
+    where: { id },
     include: {
-      Rooms: true,
-    }
+      Rooms: {
+        include: {
+          _count: {
+            select: {
+              Booking: true,
+            },
+          },
+        },
+        orderBy: { id: "asc" },
+      },
+    },
   });
+}
+
+async function findRoomById(id: number) {
+  return prisma.room.findUnique({ where: { id }, include: { Booking: true } });
 }
 
 const hotelRepository = {
   findHotels,
-  findRoomsByHotelId,
+  findRoomsFromHotelId,
+  findRoomById,
 };
 
 export default hotelRepository;
