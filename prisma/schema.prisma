@@ -11,14 +11,15 @@ datasource db {
 }
 
 model User {
-  id         Int          @id @default(autoincrement())
-  email      String       @unique @db.VarChar(255)
-  password   String       @db.VarChar(255)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  Session    Session[]
-  Enrollment Enrollment[]
-  Booking    Booking[]
+  id              Int               @id @default(autoincrement())
+  email           String            @unique @db.VarChar(255)
+  password        String            @db.VarChar(255)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Session         Session[]
+  Enrollment      Enrollment[]
+  Booking         Booking[]
+  ActivityBooking ActivityBooking[]
 }
 
 model Session {
@@ -137,4 +138,43 @@ model Booking {
   roomId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model EventDate {
+  id        Int        @id @default(autoincrement())
+  date      DateTime
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Activity  Activity[]
+}
+
+model ActivityLocal {
+  id        Int        @id @default(autoincrement())
+  name      String     @db.VarChar(255)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Activity  Activity[]
+}
+
+model Activity {
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(255)
+  dateId          Int
+  EventDate       EventDate         @relation(fields: [dateId], references: [id])
+  capacity        Int
+  localId         Int
+  ActivityLocal   ActivityLocal     @relation(fields: [localId], references: [id])
+  startsAt        DateTime
+  endsAt          DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  ActivityBooking ActivityBooking[]
+}
+
+model ActivityBooking {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  User       User     @relation(fields: [userId], references: [id])
+  activityId Int
+  Activity   Activity @relation(fields: [activityId], references: [id])
 }
