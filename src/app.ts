@@ -33,7 +33,7 @@ app
   .use("/payments", paymentsRouter)
   .use("/hotels", hotelsRouter)
   .use("/booking", bookingRouter)
-  .use("/activy", activyRouter)
+  .use("/activie", activyRouter)
   .use(handleApplicationErrors);
 
 export function init(): Promise<Express> {
