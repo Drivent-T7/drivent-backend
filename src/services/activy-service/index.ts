@@ -1,4 +1,4 @@
-import { notFoundError, unauthorizedError,  } from "@/errors";
+import { unauthorizedError } from "@/errors";
 import acitivyRepository from "@/repositories/activy-repository";
 import enrollmentRepository from "@/repositories/enrollment-repository";
 import ticketRepository from "@/repositories/ticket-repository";
