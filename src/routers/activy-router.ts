@@ -7,6 +7,7 @@ const activyRouter = Router();
 activyRouter
   .all("/*", authenticateToken)
   .get("/", getDatesEvents)
-  .get("/:eventDateId", getEventByIdDate);
+  .get("/:eventDateId", getEventByIdDate)
+  .post("/booking");
 
 export { activyRouter };
