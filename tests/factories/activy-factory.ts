@@ -3,7 +3,7 @@ import { prisma } from "@/config";
 import dayjs from "dayjs";
 
 export function createDateAcitivy() {
-  return prisma.eventDate.create({
+  return prisma.activityDate.create({
     data: {
       date: faker.date.future()
     },
@@ -19,7 +19,7 @@ export function createLocalActivy() {
 }
 
 export function createActivie(dateId: number, localId: number) {
-  return prisma.activity.create({
+  return prisma.activities.create({
     data: {
       name: faker.name.jobArea(),
       dateId,
