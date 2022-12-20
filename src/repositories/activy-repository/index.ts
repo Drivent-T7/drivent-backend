@@ -1,13 +1,13 @@
 import { prisma } from "@/config";
 
 async function findActivyDates() {
-  return prisma.eventDate.findMany();
+  return prisma.activityDate.findMany();
 }
 
 async function findActivysByDateId(dateId: number) {
   return prisma.activityLocal.findMany({
     include: {
-      Activity: {
+      Activities: {
         where: {
           dateId: dateId,
         },
