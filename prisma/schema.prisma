@@ -140,27 +140,27 @@ model Booking {
   updatedAt DateTime @updatedAt
 }
 
-model EventDate {
-  id        Int        @id @default(autoincrement())
-  date      DateTime
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Activity  Activity[]
+model ActivityDate {
+  id         Int          @id @default(autoincrement())
+  date       DateTime
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Activities Activities[]
 }
 
 model ActivityLocal {
-  id        Int        @id @default(autoincrement())
-  name      String     @db.VarChar(255)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Activity  Activity[]
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar(255)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Activities Activities[]
 }
 
-model Activity {
+model Activities {
   id              Int               @id @default(autoincrement())
   name            String            @db.VarChar(255)
   dateId          Int
-  EventDate       EventDate         @relation(fields: [dateId], references: [id])
+  ActivityDate    ActivityDate      @relation(fields: [dateId], references: [id])
   capacity        Int
   localId         Int
   ActivityLocal   ActivityLocal     @relation(fields: [localId], references: [id])
@@ -172,9 +172,9 @@ model Activity {
 }
 
 model ActivityBooking {
-  id         Int      @id @default(autoincrement())
+  id         Int        @id @default(autoincrement())
   userId     Int
-  User       User     @relation(fields: [userId], references: [id])
+  User       User       @relation(fields: [userId], references: [id])
   activityId Int
-  Activity   Activity @relation(fields: [activityId], references: [id])
+  Activities Activities @relation(fields: [activityId], references: [id])
 }

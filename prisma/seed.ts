@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import dayjs from "dayjs";
-import { date } from "joi";
 const prisma = new PrismaClient();
 
 async function main() {
@@ -23,7 +22,9 @@ async function main() {
 
   await createHotelsWithRooms();
 
-  await createActivities();
+  await createLocals();
+
+  await createActivitiesByDate()
 }
 
 main()
@@ -34,112 +35,6 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
-
-async function createActivities() {
-
-  let local = await prisma.activityLocal.findMany();
-  if (!local[0]) {
-    const created = await prisma.activityLocal.createMany({
-      data: [{
-        name: "Auditório Principal"
-      },
-      {
-        name: "Auditório Lateral"
-      },
-      {
-        name: "Auditório Superior"
-      }]
-    })
-
-    console.log(created)
-  }
-  console.log({ local })
-
-
-  let activitysDate = await prisma.eventDate.findMany();
-  if (!activitysDate[0]) {
-    const first = await prisma.eventDate.create({
-      data: {
-        date: dayjs().add(1, "days").toDate(),
-        Activity: {
-          createMany: {
-            data: [{
-              name: "Minecraft: Como montar seu pc gamer",
-              capacity: 20,
-              localId: 1,
-              startsAt: dayjs().add(1, "days").hour(9).toDate(),
-              endsAt: dayjs().add(2, "days").hour(10).toDate()
-            },
-            {
-              name: "LOL: Como montar seu pc gamer",
-              capacity: 10,
-              localId: 1,
-              startsAt: dayjs().add(1, "days").hour(10).toDate(),
-              endsAt: dayjs().add(2, "days").hour(11).toDate()
-            }]
-          }
-        }
-      }
-    }
-    );
-
-
-    const second = await prisma.eventDate.create({
-      data: {
-        date: dayjs().add(1, "days").toDate(),
-        Activity: {
-          createMany: {
-            data: [{
-              name: "Palestra",
-              capacity: 20,
-              localId: 2,
-              startsAt: dayjs().add(1, "days").hour(10).toDate(),
-              endsAt: dayjs().add(2, "days").hour(11).toDate()
-            },
-            {
-              name: "Outra Palestra",
-              capacity: 10,
-              localId: 2,
-              startsAt: dayjs().add(1, "days").hour(9).toDate(),
-              endsAt: dayjs().add(2, "days").hour(10).toDate()
-            }]
-          }
-        }
-      }
-    }
-    );
-
-    const third = await prisma.eventDate.create({
-      data: {
-        date: dayjs().add(1, "days").toDate(),
-        Activity: {
-          createMany: {
-            data: [{
-              name: "Palestra",
-              capacity: 20,
-              localId: 3,
-              startsAt: dayjs().add(1, "days").hour(10).toDate(),
-              endsAt: dayjs().add(2, "days").hour(11).toDate()
-            },
-            {
-              name: "Outra Palestra",
-              capacity: 10,
-              localId: 3,
-              startsAt: dayjs().add(1, "days").hour(9).toDate(),
-              endsAt: dayjs().add(2, "days").hour(10).toDate()
-            }]
-          }
-        }
-      }
-    }
-    )
-
-    console.log(first, second, third)
-  }
-}
-
-
 
 async function createTicketType() {
   let ticketType = await prisma.ticketType.findMany();
@@ -349,3 +244,164 @@ async function createHotelsWithRooms() {
   console.log({ hotels })
 }
 
+async function createLocals() {
+  let local = await prisma.activityLocal.findMany();
+
+  if (!local[0]) {
+    await prisma.activityLocal.createMany({
+      data: [{
+        name: "Auditório Principal"
+      },
+      {
+        name: "Auditório Lateral"
+      },
+      {
+        name: "Auditório Superior"
+      }]
+    })
+
+    local = await prisma.activityLocal.findMany();
+  }
+
+  console.log({ local })
+}
+
+async function createActivitiesByDate() {
+  let activitysDate = await prisma.activityDate.findMany({ include: { Activities: true } });
+
+  if (!activitysDate[0]) {
+
+    await prisma.activityDate.create({
+      data: {
+        date: dayjs().add(1, "days").startOf('hour').toDate(),
+        Activities: {
+          createMany: {
+            data: [{
+              name: "Palestra de Abertura",
+              capacity: 100,
+              localId: 1,
+              startsAt: dayjs().add(1, 'days').startOf('hour').hour(8).toDate(),
+              endsAt: dayjs().add(1, 'days').startOf('hour').hour(10).toDate()
+            },
+            {
+              name: "Apresentação da grade",
+              capacity: 100,
+              localId: 1,
+              startsAt: dayjs().add(1, 'days').startOf('hour').hour(10).toDate(),
+              endsAt: dayjs().add(1, 'days').startOf('hour').hour(11).toDate()
+            },
+            {
+              name: "Mesa Redonda: Mundo do T.I.",
+              capacity: 10,
+              localId: 3,
+              startsAt: dayjs().add(1, 'days').startOf('hour').hour(15).toDate(),
+              endsAt: dayjs().add(1, 'days').startOf('hour').hour(16).toDate()
+            },
+            {
+              name: "Lunch and Talk",
+              capacity: 100,
+              localId: 2,
+              startsAt: dayjs().add(1, 'days').startOf('hour').hour(11).toDate(),
+              endsAt: dayjs().add(1, 'days').startOf('hour').hour(14).toDate()
+            }
+            ]
+          }
+        }
+      }
+    })
+
+    await prisma.activityDate.create({
+      data: {
+        date: dayjs().add(2, "days").startOf('hour').toDate(),
+        Activities: {
+          createMany: {
+            data: [{
+              name: "Minecraft: Como montar seu pc gamer",
+              capacity: 20,
+              localId: 1,
+              startsAt: dayjs().add(2, 'days').startOf('hour').hour(8).toDate(),
+              endsAt: dayjs().add(2, 'days').startOf('hour').hour(9).toDate()
+            },
+            {
+              name: "LOL: Como montar seu pc gamer",
+              capacity: 10,
+              localId: 1,
+              startsAt: dayjs().add(2, 'days').startOf('hour').hour(9).toDate(),
+              endsAt: dayjs().add(2, 'days').startOf('hour').hour(11).toDate()
+            },
+            {
+              name: "Palestra: Stack Overflow",
+              capacity: 10,
+              localId: 2,
+              startsAt: dayjs().add(2, 'days').startOf('hour').hour(8).toDate(),
+              endsAt: dayjs().add(2, 'days').startOf('hour').hour(11).toDate()
+            },
+            {
+              name: "Mesa redonda: Bootcamps",
+              capacity: 10,
+              localId: 3,
+              startsAt: dayjs().add(2, 'days').startOf('hour').hour(8).toDate(),
+              endsAt: dayjs().add(2, 'days').startOf('hour').hour(9).toDate()
+            },
+            {
+              name: "Mesa redonda: JavaScript",
+              capacity: 10,
+              localId: 3,
+              startsAt: dayjs().add(2, 'days').startOf('hour').hour(9).toDate(),
+              endsAt: dayjs().add(2, 'days').startOf('hour').hour(10).toDate()
+            }]
+          }
+        }
+      }
+    });
+
+    await prisma.activityDate.create({
+      data: {
+        date: dayjs().add(3, "days").startOf('hour').toDate(),
+        Activities: {
+          createMany: {
+            data: [{
+              name: "Minecraft: Como montar seu pc gamer",
+              capacity: 40,
+              localId: 1,
+              startsAt: dayjs().add(3, 'days').startOf('hour').hour(8).toDate(),
+              endsAt: dayjs().add(3, 'days').startOf('hour').hour(9).toDate()
+            },
+            {
+              name: "LOL: Como montar seu pc gamer",
+              capacity: 40,
+              localId: 1,
+              startsAt: dayjs().add(3, 'days').startOf('hour').hour(9).toDate(),
+              endsAt: dayjs().add(3, 'days').startOf('hour').hour(11).toDate()
+            },
+            {
+              name: "Palestra: Stack Overflow",
+              capacity: 10,
+              localId: 2,
+              startsAt: dayjs().add(3, 'days').startOf('hour').hour(8).toDate(),
+              endsAt: dayjs().add(3, 'days').startOf('hour').hour(11).toDate()
+            },
+            {
+              name: "Mesa redonda: Ganhe dinheiro fácil",
+              capacity: 2,
+              localId: 3,
+              startsAt: dayjs().add(3, 'days').startOf('hour').hour(8).toDate(),
+              endsAt: dayjs().add(3, 'days').startOf('hour').hour(9).toDate()
+            },
+            {
+              name: "Mesa redonda: Start-ups",
+              capacity: 5,
+              localId: 3,
+              startsAt: dayjs().add(3, 'days').startOf('hour').hour(9).toDate(),
+              endsAt: dayjs().add(3, 'days').startOf('hour').hour(10).toDate()
+            }]
+          }
+        }
+      }
+    });
+
+    activitysDate = await prisma.activityDate.findMany({ include: { Activities: true } })
+  }
+
+  console.log({ activitysDate });
+}
