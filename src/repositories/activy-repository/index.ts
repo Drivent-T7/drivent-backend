@@ -9,16 +9,19 @@ async function findActivysByDateId(dateId: number) {
     include: {
       Activity: {
         where: {
-          dateId: dateId
+          dateId: dateId,
+        },
+        include: {
+          ActivityBooking: true
         }
       },
-    }
+    },
   });
 }
 
 const acitivyRepository = {
   findActivyDates,
-  findActivysByDateId
+  findActivysByDateId,
 };
 
 export default acitivyRepository;
