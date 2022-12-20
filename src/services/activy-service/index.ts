@@ -1,24 +1,34 @@
-import { notFoundError } from "@/errors";
+import { notFoundError, unauthorizedError,  } from "@/errors";
 import acitivyRepository from "@/repositories/activy-repository";
+import enrollmentRepository from "@/repositories/enrollment-repository";
+import ticketRepository from "@/repositories/ticket-repository";
+import { TicketStatus } from "@prisma/client";
+import { paymentRequiredError } from "../hotels-service/errors";
 
-async function getActivyDates() {
+async function getActivyDates(userId: number) {
+  await validateUserTicketOrFail(userId);
   const activyDate = await acitivyRepository.findActivyDates();
-
-  if (!activyDate) {
-    throw notFoundError();
-  }
   
   return activyDate;
 }
 
-async function getActivyByDate(dateId: number) {
+async function getActivyByDate(dateId: number, userId: number) {
+  await validateUserTicketOrFail(userId);
   const events = await acitivyRepository.findActivysByDateId(dateId);
-  
-  if (!events) {
-    throw notFoundError();
-  }
     
   return events;
+}
+
+async function validateUserTicketOrFail(userId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+
+  if (!enrollment) throw unauthorizedError();
+
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+
+  if (!ticket || ticket.TicketType.isRemote) throw unauthorizedError();
+
+  if (ticket.status !== TicketStatus.PAID) throw paymentRequiredError();
 }
 
 const activyService = {
