@@ -319,7 +319,7 @@ describe("POST /activity/booking", () => {
         const enrollment = await createEnrollmentWithAddress(user);
         const ticketType = await createTicketTypeRemote();
         await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
-        const body = { roomId: 1 };
+        const body = { activityId: 1 };
 
         const response = await server.post("/activity/booking").set("Authorization", `Bearer ${token}`).send(body);
 

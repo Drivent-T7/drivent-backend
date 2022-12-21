@@ -1,6 +1,8 @@
 import { Router } from "express";
-import { authenticateToken } from "@/middlewares";
+import { authenticateToken, validateBody } from "@/middlewares";
 import { getDatesEvents, getEventByIdDate } from "@/controllers/activy-controller";
+import { createActivityBookingSchema } from "@/schemas";
+import { bookActivity } from "@/controllers";
 
 const activyRouter = Router();
 
@@ -8,6 +10,6 @@ activyRouter
   .all("/*", authenticateToken)
   .get("/", getDatesEvents)
   .get("/:eventDateId", getEventByIdDate)
-  .post("/booking");
+  .post("/booking", validateBody(createActivityBookingSchema), bookActivity);
 
 export { activyRouter };
