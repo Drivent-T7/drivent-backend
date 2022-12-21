@@ -259,6 +259,76 @@ describe("GET /activity/:eventDateId", () => {
   });
 });
 
+describe("GET /activity/booking", () => {
+  it("should respond with status 401 if no token is given", async () => {
+    const response = await server.get("/activity/booking");
+
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  it("should respond with status 401 if given token is not valid", async () => {
+    const token = faker.lorem.word();
+
+    const response = await server.get("/activity/booking").set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  it("should respond with status 401 if there is no session with given token", async () => {
+    const userWithoutSession = await createUser();
+    const token = jwt.sign({ user: userWithoutSession.id }, process.env.JWT_SECRET);
+
+    const response = await server.get("/activity/booking").set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  describe("when token is valid", () => {
+    it("should respond with status 200 and an empty array if user does not have activities booked", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithHotel();
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+
+      const response = await server.get("/activity/booking").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.OK);
+      expect(response.body).toEqual([]);
+    });
+
+    it("should respond with status 200 and activity booking data", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithHotel();
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+      const local = await createLocalActivity();
+      const date = await createDateActivity();
+      const activity = await createActivity(date.id, local.id);
+      const booking = await createActivityBooking(user.id, activity.id);
+
+      const response = await server.get("/activity/booking").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.OK);
+      expect(response.body).toEqual([
+        {
+          activityBookingId: booking.id,
+          activities: {
+            id: activity.id,
+            name: activity.name,
+            dateId: activity.dateId,
+            capacity: activity.capacity,
+            localId: activity.localId,
+            startsAt: activity.startsAt.toISOString(),
+            endsAt: activity.endsAt.toISOString()
+          }
+        }
+      ]);
+    });
+  });
+});
+
 describe("POST /activity/booking", () => {
   it("should respond with status 401 if no token is given", async () => {
     const response = await server.post("/activity/booking");

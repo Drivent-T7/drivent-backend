@@ -10,6 +10,7 @@ activyRouter
   .all("/*", authenticateToken)
   .get("/", getDatesEvents)
   .get("/:eventDateId", getEventByIdDate)
-  .post("/booking", validateBody(createActivityBookingSchema), bookActivity);
+  .post("/booking", validateBody(createActivityBookingSchema), bookActivity)
+  .get("/booking");
 
 export { activyRouter };
