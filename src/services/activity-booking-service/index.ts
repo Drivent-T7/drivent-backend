@@ -20,8 +20,28 @@ async function bookActivity({ userId, activityId }: BookActivityParams): Promise
   return { activityBookingId: activityBooking.id };
 }
 
+async function getActivityBooking(userId: number): Promise<ActivityBookingsResult> {
+  const activityBookingResult = await activityBookingRepository.findActivityBookingByUserId(userId);
+
+  if (!activityBookingResult) throw notFoundError();
+
+  return activityBookingResult;
+}
+
 export type BookActivityParams = { userId: number; activityId: number };
 export type BookActivityResult = { activityBookingId: number }
+export type ActivityBookingsResult = {
+    id: number,
+    Activities: {
+        id: number,
+        name: string,
+        dateId: number,
+        capacity: number,
+        localId: number,
+        startsAt: Date,
+        endsAt: Date
+    }
+}[]
 
 async function validateUserEnrollmentAndTicketOrFail(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
@@ -43,7 +63,8 @@ async function validateUserEnrollmentAndTicketOrFail(userId: number) {
 }
 
 const activityBookingService = {
-  bookActivity
+  bookActivity,
+  getActivityBooking
 };
 
 export default activityBookingService;

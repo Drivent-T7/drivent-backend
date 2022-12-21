@@ -27,3 +27,16 @@ export async function bookActivity(req: AuthenticatedRequest, res: Response) {
     return res.sendStatus(httpStatus.FORBIDDEN);
   }
 }
+
+export async function getActivityBooking(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+
+  try {
+    const activityBooking = await activityBookingService.getActivityBooking(userId);
+
+    return res.status(httpStatus.OK).send(activityBooking);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(httpStatus.NOT_FOUND);
+  }
+}

@@ -7,3 +7,4 @@ export * from "./payments-router";
 export * from "./hotels-router";
 export * from "./booking-router";
 export * from "./activy-router";
+export * from "./activity-booking-router";

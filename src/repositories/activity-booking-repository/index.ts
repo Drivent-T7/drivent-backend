@@ -12,8 +12,29 @@ async function bookActivity({ userId, activityId }: BookActivityParams) {
   });
 }
 
+async function findActivityBookingByUserId(userId: number) {
+  return prisma.activityBooking.findMany({
+    where: { userId },
+    select: {
+      id: true,
+      Activities: {
+        select: {
+          id: true,
+          name: true,
+          dateId: true,
+          capacity: true,
+          localId: true,
+          startsAt: true,
+          endsAt: true
+        }
+      }
+    }
+  });
+}
+
 const activityBookingRepository = {
-  bookActivity
+  bookActivity,
+  findActivityBookingByUserId
 };
 
 export default activityBookingRepository;
