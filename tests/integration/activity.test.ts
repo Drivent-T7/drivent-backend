@@ -13,7 +13,7 @@ import {
   createTicketTypeWithOrWithoutHotel,
   createTicketTypeRemote,
 } from "../factories";
-import { createActivie, createDateAcitivy, createLocalActivy } from "../factories/activy-factory";
+import { createActivity, createDateActivity, createLocalActivity } from "../factories/activy-factory";
 
 beforeAll(async () => {
   await init();
@@ -67,9 +67,9 @@ describe("GET /activity", () => {
       const ticketType = await createTicketTypeWithOrWithoutHotel();
 
       await createTicket(enrollment.id, ticketType.id, TicketStatus.RESERVED);
-  
+
       const response = await server.get("/activity").set("Authorization", `Bearer ${token}`);
-  
+
       expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
     });
 
@@ -92,7 +92,7 @@ describe("GET /activity", () => {
         const token = await generateValidToken(user);
         const enrollment = await createEnrollmentWithAddress(user);
         const ticketType = await createTicketTypeWithOrWithoutHotel();
-  
+
         await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
 
         const response = await server.get("/activity").set("Authorization", `Bearer ${token}`);
@@ -106,7 +106,7 @@ describe("GET /activity", () => {
         const user = await createUser();
         const token = await generateValidToken(user);
         await generateValidTicket(user);
-        const date = await createDateAcitivy();
+        const date = await createDateActivity();
 
         const response = await server.get("/activity").set("Authorization", `Bearer ${token}`);
 
@@ -201,8 +201,8 @@ describe("GET /activity/:eventDateId", () => {
         const user = await createUser();
         const token = await generateValidToken(user);
         await generateValidTicket(user);
-        const local = await createLocalActivy();
-        const date = await createDateAcitivy();
+        const local = await createLocalActivity();
+        const date = await createDateActivity();
 
         const response = await server.get(`/activity/${date.id}`).set("Authorization", `Bearer ${token}`);
 
@@ -223,9 +223,9 @@ describe("GET /activity/:eventDateId", () => {
         const user = await createUser();
         const token = await generateValidToken(user);
         await generateValidTicket(user);
-        const local = await createLocalActivy();
-        const date = await createDateAcitivy();
-        const activy = await createActivie(date.id, local.id);
+        const local = await createLocalActivity();
+        const date = await createDateActivity();
+        const activity = await createActivity(date.id, local.id);
 
         const response = await server.get(`/activity/${date.id}`).set("Authorization", `Bearer ${token}`);
 
@@ -238,16 +238,16 @@ describe("GET /activity/:eventDateId", () => {
             updatedAt: local.updatedAt.toISOString(),
             Activities: [
               {
-                id: activy.id,
-                name: activy.name,
+                id: activity.id,
+                name: activity.name,
                 dateId: date.id,
                 ActivityBooking: [],
-                capacity: activy.capacity,
+                capacity: activity.capacity,
                 localId: local.id,
-                startsAt: activy.startsAt.toISOString(),
-                endsAt: activy.endsAt.toISOString(),
-                createdAt: activy.createdAt.toISOString(),
-                updatedAt: activy.updatedAt.toISOString()
+                startsAt: activity.startsAt.toISOString(),
+                endsAt: activity.endsAt.toISOString(),
+                createdAt: activity.createdAt.toISOString(),
+                updatedAt: activity.updatedAt.toISOString()
               }
             ]
           },
@@ -256,3 +256,4 @@ describe("GET /activity/:eventDateId", () => {
     });
   });
 });
+

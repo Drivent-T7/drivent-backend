@@ -19,9 +19,17 @@ async function findActivysByDateId(dateId: number) {
   });
 }
 
+async function findAcitivityById(activityId: number) {
+  return prisma.activities.findFirst({
+    where: { id: activityId },
+    include: { ActivityBooking: true }
+  });
+}
+
 const acitivyRepository = {
   findActivyDates,
   findActivysByDateId,
+  findAcitivityById
 };
 
 export default acitivyRepository;
