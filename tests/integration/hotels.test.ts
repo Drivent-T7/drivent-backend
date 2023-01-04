@@ -112,7 +112,7 @@ describe("GET /hotels", () => {
             id: hotel.id,
             name: hotel.name,
             image: hotel.image,
-            roomsCapacity: [hotel.Rooms[0].capacity, hotel.Rooms[1].capacity],
+            capacity: "Single e Double",
             availableVacancies: 3,
             createdAt: hotel.createdAt.toISOString(),
             updatedAt: hotel.updatedAt.toISOString(),
