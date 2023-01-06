@@ -146,6 +146,7 @@ model ActivityDate {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   Activities Activities[]
+  @@index([date])
 }
 
 model ActivityLocal {
