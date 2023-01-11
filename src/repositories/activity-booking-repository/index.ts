@@ -1,19 +1,27 @@
 import { prisma } from "@/config";
 import { ActivityBooking } from "@prisma/client";
+import { cacheData, deleteCachedKey, findCachedData } from "@/utils/cache";
 
-type BookActivityParams = Omit<ActivityBooking, "id">
+async function bookActivity({ userId, activityId, dateId }: BookActivityParams) {
+  const keys = [`activitiesFromDateId${dateId}`, `activity${activityId}`, `activityBookingByUserId${userId}`];
+  deleteCachedKey(keys);
 
-async function bookActivity({ userId, activityId }: BookActivityParams) {
   return prisma.activityBooking.create({
     data: {
       userId,
-      activityId
-    }
+      activityId,
+    },
   });
 }
 
 async function findActivityBookingByUserId(userId: number) {
-  return prisma.activityBooking.findMany({
+  const cachedData = await findCachedData(`activityBookingByUserId${userId}`);
+
+  if (cachedData.length > 0) {
+    return cachedData;
+  }
+
+  const activityBooking = prisma.activityBooking.findMany({
     where: { userId },
     select: {
       id: true,
@@ -25,16 +33,22 @@ async function findActivityBookingByUserId(userId: number) {
           capacity: true,
           localId: true,
           startsAt: true,
-          endsAt: true
-        }
-      }
-    }
+          endsAt: true,
+        },
+      },
+    },
   });
+
+  cacheData({ key: `activityBookingByUserId${userId}`, value: activityBooking });
+
+  return activityBooking;
 }
+
+type BookActivityParams = Omit<ActivityBooking, "id"> & { dateId: number };
 
 const activityBookingRepository = {
   bookActivity,
-  findActivityBookingByUserId
+  findActivityBookingByUserId,
 };
 
 export default activityBookingRepository;
