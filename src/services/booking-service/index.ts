@@ -6,6 +6,10 @@ import hotelRepository from "@/repositories/hotel-repository";
 import ticketRepository from "@/repositories/ticket-repository";
 
 async function getBooking(userId: number): Promise<GetBookingResult> {
+  const cachedBooking = await bookingRepository.findCachedBooking({ userId });
+
+  if (cachedBooking.length > 0) return cachedBooking;
+
   const bookingResult = await bookingRepository.findBookingByUserId(userId);
 
   if (!bookingResult) throw notFoundError();
@@ -21,6 +25,8 @@ async function getBooking(userId: number): Promise<GetBookingResult> {
       bookeds: bookingResult.Room._count.Booking,
     },
   };
+
+  await bookingRepository.cacheBooking({ userId, value: booking });
 
   return booking;
 }
@@ -44,7 +50,7 @@ async function postBooking({ userId, roomId }: CreateBookingParams): Promise<Pos
 
   if (room.capacity <= room.Booking.length) throw cannotBookingError();
 
-  const booking = await bookingRepository.createBooking({ roomId, userId });
+  const booking = await bookingRepository.createBooking({ roomId, userId, hotelId: room.hotelId });
 
   return { bookingId: booking.id };
 }
@@ -62,7 +68,13 @@ async function putBooking({ userId, roomId, bookingId }: UpdateBookingParams): P
 
   if (room.capacity <= room.Booking.length) throw cannotBookingError();
 
-  const updatedBooking = await bookingRepository.updateBooking({ id: bookingId, roomId, userId });
+  const updatedBooking = await bookingRepository.updateBooking({
+    id: bookingId,
+    roomId,
+    userId,
+    fromHotelId: booking.Room.hotelId,
+    toHotelId: room.hotelId,
+  });
 
   return { bookingId: updatedBooking.id };
 }
