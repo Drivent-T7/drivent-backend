@@ -7,17 +7,25 @@ import ticketRepository from "@/repositories/ticket-repository";
 
 async function getHotels(userId: number): Promise<GetHotelsResult[]> {
   await validateUserTicketOrFail(userId);
-  const hotels = await hotelRepository.findHotels();
-  return formatHotels(hotels);
-}
 
-export type GetHotelsResult = Hotel & {
-  capacity: string;
-  availableVacancies: number;
-};
+  const cachedHotels = await hotelRepository.findCacheHotelsData({ key: "hotels" });
+
+  if (cachedHotels.length > 0) return cachedHotels;
+
+  const hotels = await hotelRepository.findHotels();
+  const formatedHotels = formatHotels(hotels);
+
+  await hotelRepository.cacheHotelsData({ key: "hotels", value: formatedHotels });
+
+  return formatedHotels;
+}
 
 async function getRoomsFromHotel(hotelId: number, userId: number): Promise<GetRoomsFromHotelResult> {
   await validateUserTicketOrFail(userId);
+
+  const cachedRooms = await hotelRepository.findCacheHotelsData({ key: "roomsFromHotelId", id: hotelId });
+
+  if (cachedRooms.length > 0) return cachedRooms;
 
   const hotel = await hotelRepository.findRoomsFromHotelId(hotelId);
 
@@ -35,14 +43,10 @@ async function getRoomsFromHotel(hotelId: number, userId: number): Promise<GetRo
 
   const hotelResult = { ...hotel, Rooms: rooms };
 
+  await hotelRepository.cacheHotelsData({ key: "roomsFromHotelId", value: hotelResult, id: hotelId });
+
   return hotelResult;
 }
-
-export type GetRoomsFromHotelResult = Hotel & {
-  Rooms: (Room & {
-    bookeds: number;
-  })[];
-};
 
 async function validateUserTicketOrFail(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
@@ -88,6 +92,17 @@ function formatHotels(hotels: FormatHotelsParams) {
     };
   });
 }
+
+export type GetHotelsResult = Hotel & {
+  capacity: string;
+  availableVacancies: number;
+};
+
+export type GetRoomsFromHotelResult = Hotel & {
+  Rooms: (Room & {
+    bookeds: number;
+  })[];
+};
 
 type FormatHotelsParams = (Hotel & {
   Rooms: {
