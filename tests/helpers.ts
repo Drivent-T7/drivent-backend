@@ -3,9 +3,10 @@ import { TicketStatus, User } from "@prisma/client";
 
 import { createEnrollmentWithAddress, createTicket, createTicketTypeWithOrWithoutHotel, createUser } from "./factories";
 import { createSession } from "./factories/sessions-factory";
-import { prisma } from "@/config";
+import { prisma, redis } from "@/config";
 
 export async function cleanDb() {
+  await redis.flushAll();
   await prisma.address.deleteMany({});
   await prisma.payment.deleteMany({});
   await prisma.ticket.deleteMany({});

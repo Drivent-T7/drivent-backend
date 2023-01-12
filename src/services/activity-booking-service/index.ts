@@ -15,7 +15,7 @@ async function bookActivity({ userId, activityId }: BookActivityParams): Promise
 
   if (activity.capacity <= activity.ActivityBooking.length) throw cannotBookActivityError();
 
-  const activityBooking = await activityBookingRepository.bookActivity({ activityId, userId });
+  const activityBooking = await activityBookingRepository.bookActivity({ activityId, userId, dateId: activity.dateId });
 
   return { activityBookingId: activityBooking.id };
 }
@@ -29,19 +29,19 @@ async function getActivityBooking(userId: number): Promise<ActivityBookingsResul
 }
 
 export type BookActivityParams = { userId: number; activityId: number };
-export type BookActivityResult = { activityBookingId: number }
+export type BookActivityResult = { activityBookingId: number };
 export type ActivityBookingsResult = {
-    id: number,
-    Activities: {
-        id: number,
-        name: string,
-        dateId: number,
-        capacity: number,
-        localId: number,
-        startsAt: Date,
-        endsAt: Date
-    }
-}[]
+  id: number;
+  Activities: {
+    id: number;
+    name: string;
+    dateId: number;
+    capacity: number;
+    localId: number;
+    startsAt: Date;
+    endsAt: Date;
+  };
+}[];
 
 async function validateUserEnrollmentAndTicketOrFail(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
@@ -50,10 +50,7 @@ async function validateUserEnrollmentAndTicketOrFail(userId: number) {
 
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
 
-  if (
-    !ticket ||
-        ticket.TicketType.isRemote
-  ) {
+  if (!ticket || ticket.TicketType.isRemote) {
     throw cannotBookActivityError();
   }
 
@@ -64,7 +61,7 @@ async function validateUserEnrollmentAndTicketOrFail(userId: number) {
 
 const activityBookingService = {
   bookActivity,
-  getActivityBooking
+  getActivityBooking,
 };
 
 export default activityBookingService;
