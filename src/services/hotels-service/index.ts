@@ -31,14 +31,10 @@ async function getRoomsFromHotel(hotelId: number, userId: number): Promise<GetRo
 
   if (!hotel) throw notFoundError();
 
-  const rooms = hotel.Rooms.map(({ id, name, capacity, _count, createdAt, updatedAt }) => ({
-    id,
-    name,
-    capacity,
+  const rooms = hotel.Rooms.map(({ _count, ...data }) => ({
     hotelId,
     bookeds: _count.Booking,
-    createdAt,
-    updatedAt,
+    ...data,
   }));
 
   const hotelResult = { ...hotel, Rooms: rooms };
