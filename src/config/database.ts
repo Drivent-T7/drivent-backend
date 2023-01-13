@@ -2,7 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import { createClient } from "redis";
 
 export let prisma: PrismaClient;
-export const redis = createClient();
+export const redis = createClient({
+  url: "redis://drivent-cache:6379"
+});
 
 export function connectDb(): void {
   prisma = new PrismaClient();
