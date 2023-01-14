@@ -3,7 +3,7 @@ import { createClient } from "redis";
 
 export let prisma: PrismaClient;
 export const redis = createClient({
-  url: "redis://drivent-cache:6379"
+  url: process.env.REDIS_URL
 });
 
 export function connectDb(): void {
